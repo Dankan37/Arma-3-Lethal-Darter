@@ -1,0 +1,67 @@
+_configDrone = {
+	_vehicle = _this select 0;
+	_configDrone = _this select 1;
+	_handleDrone = _this select 2;
+
+	_vehicle addAction ["Resupply drone", {
+		params ["_target", "_caller", "_actionId", "_arguments"];
+
+		_hasRGO = [_caller, 'MiniGrenade'] call BIS_fnc_hasItem;
+		_hasRGN = [_caller, 'HandGrenade'] call BIS_fnc_hasItem;
+		if(_hasRGO or _hasRGN) then {
+			if(_hasRGO) then {
+				_caller removeItem "MiniGrenade";
+			} else {
+				_caller removeItem "HandGrenade";
+			};
+
+			_configDrone = (_this select 3) select 0;
+			_handleDrone = (_this select 3) select 1;
+			
+			_target removeAction _actionId;
+			[_target, _configDrone, _handleDrone] spawn _handleDrone;
+		} else {
+			_id = owner _caller;
+			["You don't have any suitable grenade (RGO/RGN)"] remoteExec ["hint", _id];
+		};
+	}, [_configDrone, _handleDrone], 2, true, true, "", "!(_this in _target)", 5];
+};
+
+_handleDrone = {
+	_drone = _this select 0;
+	_configDrone = _this select 1;
+	_handleDrone = _this select 2;
+
+	_gren = createSimpleObject ["A3\Weapons_f\ammo\Handgrenade", [0,0,0]];
+	_gren attachTo [_drone, [0,0,-0.15]];
+	_drone setVariable ["grenade", _gren];
+
+	{
+		_x addAction ["Drop bomb", {
+			params ["_target", "_caller", "_actionId", "_arguments"];
+			_configDrone = (_this select 3) select 0;
+			_handleDrone = (_this select 3) select 1;
+			_vehicle = vehicle _caller;
+
+			_gren = _vehicle getVariable ["grenade", objNull];
+			detach _gren;
+			deleteVehicle _gren;
+
+			_droneVelocity = velocity _vehicle;
+
+			_pos = _target modelToWorld [0,0,-0.15];
+			_gren = "Grenade" createvehicle _pos;
+			_gren setVectorDirandUp [[0,0,-1],[0.1,0.1,1]]; 
+			_gren setVelocity [_droneVelocity select 0, _droneVelocity select 1,-1];
+
+			
+			{
+				_x removeAction _actionId;
+			} forEach [gunner _vehicle, driver _vehicle];
+			
+			[_vehicle, _configDrone, _handleDrone] spawn _configDrone;
+		}, [_configDrone, _handleDrone]];
+	}forEach [gunner _drone, driver _drone];
+};
+
+[this, _configDrone, _handleDrone] spawn _handleDrone;
