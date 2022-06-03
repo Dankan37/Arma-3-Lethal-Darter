@@ -1,0 +1,69 @@
+_configDrone = {
+	_vehicle = _this select 0;
+	_configDrone = _this select 1;
+	_handleDrone = _this select 2;
+
+	_vehicle addAction ["Resupply drone", {
+		params ["_target", "_caller", "_actionId", "_arguments"];
+		_hasItem = [_caller, 'APERSMineDispenser_Mag'] call BIS_fnc_hasItem;
+
+		if(_hasItem) then {
+			_caller removeItem 'APERSMineDispenser_Mag';
+			_configDrone = (_this select 3) select 0;
+			_handleDrone = (_this select 3) select 1;
+			
+			_target removeAction _actionId;
+			[_target, _configDrone, _handleDrone] spawn _handleDrone;
+		} else {
+			_id = owner _caller;
+			["You don't have a grenade dispenser"] remoteExec ["hint", _id];
+		};
+	}, [_configDrone, _handleDrone], 2, true, true, "", "!(_this in _target)", 5];
+};
+
+_handleDrone = {
+	_drone = _this select 0;
+	_configDrone = _this select 1;
+	_handleDrone = _this select 2;
+
+	_gren = createSimpleObject ["A3\Weapons_F_Orange\Explosives\APERSmineDispenser", [0,0,0]];
+	_gren attachTo [_drone, [0,0,-0.25]];
+	_gren setDir (-180);
+	_drone setVariable ["grenade", _gren];
+
+	{
+		_x addAction ["Drop bomb", {
+			params ["_target", "_caller", "_actionId", "_arguments"];
+			_configDrone = (_this select 3) select 0;
+			_handleDrone = (_this select 3) select 1;
+			_vehicle = vehicle _caller;
+
+			_gren = _vehicle getVariable ["grenade", objNull];
+			detach _gren;
+			deleteVehicle _gren;
+
+			_droneVelocity = velocity _vehicle;
+			_vehicle allowDamage false;
+			[_vehicle] spawn {
+				_drone = _this select 0;
+				_driver = (driver _drone);
+				_pos = _drone modelToWorld [0,0,-0.25];
+				_dispenser = "APERSMineDispenser_Ammo" createVehicle _pos;
+				_dispenser setDir (direction _drone);
+				_driver addOwnedMine _dispenser;
+				_driver action ["TouchOff", _driver];
+				sleep 0.1;
+				_drone allowDamage false;
+			};
+
+			
+			{
+				_x removeAction _actionId;
+			} forEach [gunner _vehicle, driver _vehicle];
+			
+			[_vehicle, _configDrone, _handleDrone] spawn _configDrone;
+		}, [_configDrone, _handleDrone]];
+	}forEach [gunner _drone, driver _drone];
+};
+
+[this, _configDrone, _handleDrone] spawn _handleDrone;
