@@ -6,6 +6,8 @@ class CfgFunctions
 		class scripts {
 			class initDrone {};
 			class makeGrenadeDrone {};
+			class initColibri {};
+			class setupColibri {};
 		}
 	};
 };
