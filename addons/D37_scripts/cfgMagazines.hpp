@@ -13,5 +13,8 @@ class cfgMagazines {
 		displayName = "AR-4 Colibri";
 		author = "Dankan37";
 		mass = 80;
+
+		//Stuff for ace
+		ace_explosives_SetupObject = "B_UAV_02_F_Mini";
 	};
 };

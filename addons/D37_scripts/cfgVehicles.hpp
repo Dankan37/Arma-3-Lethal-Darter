@@ -4,6 +4,18 @@ class CfgVehicles {
 	class UAV_01_base_F: Helicopter_Base_F{
 		class EventHandlers;
 	};
+
+	class UAV_06_base_F: Helicopter_Base_F {
+		class EventHandlers;
+	};
+
+	class B_UAV_06_F: UAV_06_base_F {
+		class EventHandlers: EventHandlers {
+			class lethalDarter {
+				init = "[_this select 0, 4] spawn D37_fnc_makeGrenadeDrone;";
+			};
+		}
+	}
 	
 	class B_UAV_01_F: UAV_01_base_F {
 		class EventHandlers:EventHandlers {
@@ -13,6 +25,23 @@ class CfgVehicles {
 		};
 
 		class assembleInfo;
+	};
+
+	class O_UAV_01_F: B_UAV_01_F {};
+	class I_UAV_01_F: B_UAV_01_F {};
+	class O_UAV_06_F: UAV_01_base_F {
+		class EventHandlers: EventHandlers {
+			class lethalDarter {
+				init = "[_this select 0, 4] spawn D37_fnc_makeGrenadeDrone;";
+			};
+		};
+	};
+	class I_UAV_06_F: UAV_01_base_F {
+		class EventHandlers: EventHandlers {
+			class lethalDarter {
+				init = "[_this select 0, 4] spawn D37_fnc_makeGrenadeDrone;";
+			};
+		};
 	};
 
 	class B_UAV_01_F_Armed: B_UAV_01_F {
@@ -38,8 +67,8 @@ class CfgVehicles {
 		};
 
 		enableManualFire = 0;
-		fuelCapacity = 10;
-		hasGunner = -1;
+		fuelCapacity = 8;
+		hasGunner = 0;
 		showgunneroptics = 0;
 
 		class Turrets {};

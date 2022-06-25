@@ -1,6 +1,19 @@
 _drone = param[0];
 
-//Set it to the owner side
+if(!isServer) exitWith {};
+//There is an issue with ACE where the drone is place with a mass of 5, this break everything and apparently setting the mass to 170 (AR2 drone) fixes everythind idk lol bohemia fix this
+_drone setMass 170;
+if(count crew _drone == 0) then {
+	_list = _drone nearEntities ["Man", 4];
+	_crew = createVehicleCrew _drone;
+
+	_side = west;
+	if(count _list > 0) then {
+		_side = side selectRandom _list;;
+	};
+	(crew _drone) joinSilent (createGroup [_side, true]);
+};
+
 _drone addAction ["Disassemble drone", {
 	params ["_target", "_caller", "_actionId", "_arguments"];
 
@@ -24,7 +37,7 @@ _drone addAction ["Disassemble drone", {
 	} else {
 		["You don't have enough space to carry this drone"] remoteExec ["hint", _id];
 	};
-}, nil, 1, false, true, "", "!(_this in _target) and (isTouchingGround _target) and (alive _target)"];
+}, nil, 1, false, true, "", "!(_this in _target) and (isTouchingGround _target) and (alive _target)", 3];
 
 //Make it possible to attach grenades
 [_drone] spawn D37_fnc_makeGrenadeDrone; 

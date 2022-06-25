@@ -1,13 +1,10 @@
 //Spawns a drone with a grenade attached
-_drone = param[0];
-_grenade = param[1,"G_40mm_Drone"];
+_drone 		= param[0];
+_grenade 	= param[1,"G_40mm_Drone"];
+_name 		= param[2, "grenade"];
 
-//RGO and RGN grenades have special treatment
-if((_grenade == "mini_Grenade") or (_grenade == "GrenadeHand")) then {
-	_grenade = "G_40mm_Drone";
-};
+if(is3DEN) exitWith {};
 
-//Cheesy way to make this code run only when the mission has started
 //waitUntil {time > 0 and !is3DEN};
 _gren = "G_40mm_Drone" createVehicle [0,0,1000];
 _gren setVectorDirandUp [[0,0,-1],[0.1,0.1,1]]; 
@@ -16,7 +13,7 @@ _drone setVariable ["grenadeObj", _gren];
 
 _ids = [];
 {
-	_n = _x addAction ["Drop bomb", {
+	_n = _x addAction [("<t color='#FF0000'>" + "Drop " + _name + "</t>"), {
 		//HandGrenade
 		params ["_target", "_caller", "_actionId", "_arguments"];
 		_vehicle = vehicle _caller;
@@ -40,17 +37,35 @@ _ids = [];
 		
 		{
 			_x removeAction _actionId;
-		} forEach [gunner _vehicle, driver _vehicle];
+		} forEach crew _vehicle;
 		
 		//Given how things are setup the id can only be accessed later
-		_removeId = (_vehicle getVariable ["removeId",99]);
+		//_removeId = (_vehicle getVariable ["removeId",99]);
+
+		//Bit of a complex code, we check every grenade type in the saved array and see if matches the one we dropped, then we remove the IDs associated with that grenade
+		_found = false;
+		_removeId = 99;
+		_index = 0;
+		_idArr = _vehicle getVariable ["_idArr", []];
+		{
+			_IDgrenade = (_x select 1);
+			if(_IDgrenade == _grenadeType and !_found) then {
+				_found = true; //TODO find function
+				_removeId = (_x select 0);
+				_idArr deleteAt _index;
+			};
+			_index = _index + 1;
+		}forEach _idArr;
+
+		
+		_vehicle setVariable ["_idArr", _idArr];
 		_vehicle removeAction _removeId;
 
 		//Re initialize drone
 		[_vehicle] call D37_fnc_makeGrenadeDrone;
-	}, [_grenade]];
+	}, [_grenade], 10];
 
 	_ids pushBack _n;
-}forEach [gunner _drone, driver _drone];
+}forEach crew _drone;
 
 _ids;
